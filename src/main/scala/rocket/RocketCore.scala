@@ -862,7 +862,10 @@ class Rocket(tile: RocketTile)(implicit p: Parameters) extends CoreModule()(p)
   csr.io.interrupts := io.interrupts
   csr.io.hartid := io.hartid
   io.fpu.fcsr_rm := csr.io.fcsr_rm
-  csr.io.fcsr_flags := io.fpu.fcsr_flags
+  val vector_fcsr_flags = if (usingVector) io.vector.get.exc.bits else 0.U
+  val vector_fcsr_flags_valid = if (usingVector) io.vector.get.exc.valid else false.B
+  csr.io.fcsr_flags.valid := io.fpu.fcsr_flags.valid | vector_fcsr_flags_valid
+  csr.io.fcsr_flags.bits := (io.fpu.fcsr_flags.bits & Fill(5, io.fpu.fcsr_flags.valid)) | (vector_fcsr_flags & Fill(5, vector_fcsr_flags_valid)) 
   io.fpu.time := csr.io.time(31,0)
   io.fpu.hartid := io.hartid
   csr.io.rocc_interrupt := io.rocc.interrupt
